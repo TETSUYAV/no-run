@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { Compass, Sparkles } from 'lucide-react';
 
 export const metadata = {
-  title: 'Page Non Trouvée (404) — GhostPace Stealth Lab',
-  description: 'La coordonnée GPS demandée n’existe pas sur la carte GhostPace.',
+  title: 'Page Non Trouvée (404) — No Run',
+  description: 'La coordonnée GPS demandée n’existe pas sur la carte No Run.',
 };
 
 export default function NotFound() {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { CookieBanner } from '@/components/CookieBanner';
+import { Analytics } from '@/components/Analytics';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -10,47 +11,49 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ghostpace.app'),
+  metadataBase: new URL('https://norun.app'),
   title: {
-    default: 'GhostPace — Télémétrie d’Élite & Générateur GPX Strava',
-    template: '%s | GhostPace',
+    default: 'No Run — Faux Tracés Strava & Télémétrie GPX',
+    template: '%s | No Run',
   },
   description:
-    'Générez des traces GPX furtives ultra-réalistes : profil altimétrique SRTM, asservissement GAP physiologique en côte et fréquence cardiaque synchronisée pour Strava.',
+    'Générez de faux tracés Strava ultra-réalistes sans courir : profil altimétrique SRTM, asservissement GAP physiologique en côte et fréquence cardiaque synchronisée.',
   keywords: [
+    'faux trace strava',
+    'no run',
     'gpx generator',
-    'strava trace',
+    'strava faker',
     'gpx garmin',
-    'simulation course',
-    'trace furtive',
+    'simulation course sans courir',
+    'trace alibi',
     'canaprun alternative',
     'elevation srtm',
   ],
-  authors: [{ name: 'GhostPace Stealth Lab' }],
-  creator: 'GhostPace',
+  authors: [{ name: 'No Run' }],
+  creator: 'No Run',
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://ghostpace.app',
-    title: 'GhostPace — Télémétrie d’Élite & Générateur GPX Strava',
+    url: 'https://norun.app',
+    title: 'No Run — Faux Tracés Strava & Télémétrie GPX',
     description:
-      'Générez des traces GPX furtives ultra-réalistes avec calibration bi-passe GAP, altimétrie SRTM et signatures Garmin/Apple Watch.',
-    siteName: 'GhostPace Stealth Lab',
+      'Générez de faux tracés Strava ultra-réalistes sans quitter votre canapé : calibration GAP, altimétrie SRTM et signatures Garmin/Apple Watch.',
+    siteName: 'No Run',
     images: [
       {
-        url: '/icon-512.png',
-        width: 512,
-        height: 512,
-        alt: 'GhostPace Stealth Lab Logo',
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'No Run — La trace Strava parfaite sans courir',
       },
     ],
   },
   twitter: {
-    card: 'summary',
-    title: 'GhostPace — Télémétrie d’Élite & Générateur GPX Strava',
+    card: 'summary_large_image',
+    title: 'No Run — Faux Tracés Strava & Télémétrie GPX',
     description:
-      'Générez des traces GPX furtives ultra-réalistes calibrées pour Strava, Garmin et Komoot.',
-    images: ['/icon-512.png'],
+      'Générez de faux tracés Strava ultra-réalistes sans courir. Calibré pour Strava, Garmin et Komoot.',
+    images: ['/og-image.png'],
   },
   manifest: '/manifest.webmanifest',
   icons: {
@@ -68,7 +71,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'GhostPace',
+    title: 'No Run',
   },
 };
 
@@ -81,6 +84,7 @@ export default function RootLayout({
     <html lang="fr" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
+        <Analytics />
         <CookieBanner />
       </body>
     </html>

@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/'],
     },
-    sitemap: 'https://ghostpace.app/sitemap.xml',
+    sitemap: 'https://norun.app/sitemap.xml',
   };
 }

@@ -33,8 +33,9 @@ const MapView = dynamic(
   }
 );
 
-const DRAFT_STORAGE_KEY = 'ghostpace.draft.v1';
-const LEGACY_STORAGE_KEY = 'canaprun.draft.v1';
+const DRAFT_STORAGE_KEY = 'norun.draft.v1';
+const LEGACY_GHOSTPACE_KEY = 'ghostpace.draft.v1';
+const LEGACY_CANAPRUN_KEY = 'canaprun.draft.v1';
 
 function createDefaultDraft(sport: Sport = 'running'): ActivityDraft {
   const defaults = SPORT_DEFAULTS[sport];
@@ -68,7 +69,10 @@ export default function CreatePage() {
   // Restore draft from localStorage on mount
   React.useEffect(() => {
     try {
-      const stored = localStorage.getItem(DRAFT_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+      const stored =
+        localStorage.getItem(DRAFT_STORAGE_KEY) ||
+        localStorage.getItem(LEGACY_GHOSTPACE_KEY) ||
+        localStorage.getItem(LEGACY_CANAPRUN_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && Array.isArray(parsed.waypoints) && parsed.waypoints.length > 0) {
@@ -192,7 +196,8 @@ export default function CreatePage() {
   const handleClear = () => {
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      localStorage.removeItem(LEGACY_GHOSTPACE_KEY);
+      localStorage.removeItem(LEGACY_CANAPRUN_KEY);
     } catch {}
     setDraft((prev) => ({
       ...createDefaultDraft(prev.sport),

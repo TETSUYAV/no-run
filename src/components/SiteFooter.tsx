@@ -1,28 +1,27 @@
 import Link from 'next/link';
-import { Shield, Sparkles } from 'lucide-react';
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-[#e6e6e1] bg-white/70 backdrop-blur-md">
+    <footer className="mt-auto border-t border-[#e9e8e4] bg-[#faf9f5]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           {/* Brand & status */}
           <div className="flex flex-col items-center md:items-start gap-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold uppercase font-mono tracking-tight text-[#1d1d1f]">
-                Ghost<span className="text-[#fc5200]">Pace</span>
+              <span className="text-base font-bold font-mono tracking-tight text-[#37352f]">
+                No <span className="text-[#fc5200]">Run</span>
               </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-[#fc5200] bg-[#fff2eb] px-2 py-0.5 rounded-full border border-[#ffd8c7]">
-                v1.2 Public
+              <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-[#787774] bg-[#f1f0ec]">
+                v1.2 Studio GPS
               </span>
             </div>
-            <p className="text-xs text-[#666660]">
-              Moteur télémétrique et générateur GPX calibré pour Strava, Garmin et Komoot.
+            <p className="text-xs text-[#787774]">
+              Générateur de traces Strava et simulateur télémétrique sans bouger du canapé.
             </p>
           </div>
 
           {/* Nav links */}
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-[#666660]">
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-medium text-[#787774]">
             <Link href="/create" className="hover:text-[#fc5200] transition-colors">
               Tracer une sortie
             </Link>
@@ -41,11 +40,11 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <div className="mt-8 border-t border-[#f0f0ec] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#999990]">
-          <p>© {new Date().getFullYear()} GhostPace Stealth Lab. Tous droits réservés.</p>
+        <div className="mt-8 border-t border-[#f1f0ec] pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[#9b9a97]">
+          <p>© {new Date().getFullYear()} No Run. Document public non affilié à Strava Inc.</p>
           <div className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-[#10b981]" />
-            <span>Tous les systèmes opérationnels (SRTM & Copernicus GPS)</span>
+            <span className="text-[#374635] font-medium">Tous les systèmes opérationnels (SRTM & Copernicus GPS)</span>
           </div>
         </div>
       </div>

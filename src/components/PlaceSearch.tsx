@@ -98,7 +98,7 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
   };
 
   return (
-    <div ref={containerRef} className="relative w-64 max-w-[calc(100vw-2rem)]">
+    <div ref={containerRef} className="relative w-72 max-w-[calc(100vw-2rem)]">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -106,26 +106,26 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
         }}
         className="relative"
       >
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#666660]" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[#787774]" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
-          placeholder="Rechercher une ville, un col, un spot…"
+          placeholder="Rechercher un spot, col, ville…"
           aria-label="Rechercher un lieu"
-          className="h-10 w-full rounded-full border border-[#e6e6e1] bg-white/90 pl-10 pr-9 text-xs font-medium text-[#1d1d1f] shadow-[0_4px_16px_rgba(29,29,31,0.06)] backdrop-blur-xl placeholder:text-[#8c8c85] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc5200] focus-visible:border-transparent transition-all"
+          className="h-9 w-full rounded-lg border border-[#e9e8e4] bg-white/95 pl-8 pr-8 text-xs font-medium text-[#37352f] shadow-sm backdrop-blur-md placeholder:text-[#9b9a97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc5200] focus-visible:border-transparent transition-all"
         />
         {loading ? (
-          <Loader2 className="absolute right-3.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-[#fc5200]" />
+          <Loader2 className="absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 animate-spin text-[#fc5200]" />
         ) : query ? (
           <button
             type="button"
             onClick={handleClear}
             aria-label="Effacer la recherche"
-            className="absolute right-2.5 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full text-[#666660] hover:bg-[#fff2eb] transition-colors"
+            className="absolute right-2 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-md text-[#787774] hover:bg-[#f1f0ec] transition-colors"
           >
-            <X className="size-3.5" />
+            <X className="size-3" />
           </button>
         ) : null}
       </form>
@@ -136,18 +136,18 @@ export function PlaceSearch({ onSelect }: PlaceSearchProps) {
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-2xl border border-[#e6e6e1] bg-white/95 p-1.5 shadow-xl backdrop-blur-xl"
+            transition={{ duration: 0.12, ease: 'easeOut' }}
+            className="notion-card absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto p-1 backdrop-blur-md"
           >
             {results.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => handleSelect(item)}
-                  className="group flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs transition-colors hover:bg-[#fff2eb]"
+                  className="group flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-[#f1f0ec]"
                 >
                   <MapPin className="size-3.5 shrink-0 text-[#fc5200] opacity-80 group-hover:opacity-100" />
-                  <span className="line-clamp-1 text-[#1d1d1f] font-medium">{item.nom}</span>
+                  <span className="line-clamp-1 text-[#37352f] font-medium">{item.nom}</span>
                 </button>
               </li>
             ))}

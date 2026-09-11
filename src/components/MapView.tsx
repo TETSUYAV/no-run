@@ -8,14 +8,16 @@ import { PlaceSearch } from './PlaceSearch';
 import { Button } from './ui/Button';
 import { cn } from '@/lib/utils';
 import 'leaflet/dist/leaflet.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 export interface BasemapConfig {
   id: string;
   label: string;
   shortLabel: string;
   description: string;
+  type: 'maplibre' | 'raster';
   url: string;
-  options: {
+  options?: {
     attribution: string;
     maxZoom: number;
     subdomains?: string;
@@ -24,22 +26,35 @@ export interface BasemapConfig {
 
 export const BASEMAPS: BasemapConfig[] = [
   {
-    id: 'osm',
-    label: 'Standard OSM',
-    shortLabel: 'OSM',
-    description: 'Réseau routier, sentiers & escaliers précis',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    },
+    id: 'positron',
+    label: 'Minimaliste Positron',
+    shortLabel: 'Minimal',
+    description: 'Style gris clair épuré, zéro distraction (recommandé)',
+    type: 'maplibre',
+    url: 'https://tiles.openfreemap.org/styles/positron',
+  },
+  {
+    id: 'liberty',
+    label: 'Élégant Liberty',
+    shortLabel: 'Liberty',
+    description: 'Cartographie douce, fluide et moderne',
+    type: 'maplibre',
+    url: 'https://tiles.openfreemap.org/styles/liberty',
+  },
+  {
+    id: 'bright',
+    label: 'Urbain Précis',
+    shortLabel: 'Précis',
+    description: 'Contraste net et détails routiers renforcés',
+    type: 'maplibre',
+    url: 'https://tiles.openfreemap.org/styles/bright',
   },
   {
     id: 'topo',
     label: 'Relief & Outdoor',
     shortLabel: 'Relief',
     description: 'Courbes de niveau & topographie (Esri)',
+    type: 'raster',
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
     options: {
       attribution: 'Tiles &copy; Esri & contributors',
@@ -47,17 +62,29 @@ export const BASEMAPS: BasemapConfig[] = [
     },
   },
   {
-    id: 'street',
-    label: 'Urbain Clair',
-    shortLabel: 'Urbain',
-    description: 'Cartographie citadine épurée (Esri)',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    id: 'osm',
+    label: 'Standard OSM',
+    shortLabel: 'OSM',
+    description: 'Réseau routier & sentiers piétons détaillés',
+    type: 'raster',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     options: {
-      attribution: 'Tiles &copy; Esri',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
       maxZoom: 19,
     },
   },
 ];
+
+function createBasemapLayer(L: any, config: BasemapConfig) {
+  if (config.type === 'maplibre') {
+    return (L as any).maplibreGL({
+      style: config.url,
+    });
+  } else {
+    return L.tileLayer(config.url, config.options);
+  }
+}
 
 export interface MapViewProps {
   waypoints: Waypoint[];
@@ -123,9 +150,10 @@ export function MapView({
   const [isDrawingMode, setIsDrawingMode] = React.useState(false);
   const [drawnPoints, setDrawnPoints] = React.useState<Waypoint[] | null>(null);
   const [showTip, setShowTip] = React.useState(true);
-  const [selectedBasemap, setSelectedBasemap] = React.useState<string>('osm');
+  const [selectedBasemap, setSelectedBasemap] = React.useState<string>('positron');
   const [isLayersOpen, setIsLayersOpen] = React.useState(false);
   const activeTileLayerRef = React.useRef<any>(null);
+  const currentBasemapIdRef = React.useRef<string | null>(null);
   const layersMenuRef = React.useRef<HTMLDivElement>(null);
 
   const waypointsRef = React.useRef(waypoints);
@@ -158,6 +186,12 @@ export function MapView({
       leafletRef.current = L;
       (window as any).L = L;
 
+      // Import MapLibre GL for crisp vector basemaps
+      const maplibreglModule = await import('maplibre-gl');
+      const maplibregl = (maplibreglModule as any).default || maplibreglModule;
+      (window as any).maplibregl = maplibregl;
+      await import('@maplibre/maplibre-gl-leaflet');
+
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -176,18 +210,22 @@ export function MapView({
 
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-      // Restore saved basemap preference
-      let initialBasemapId = 'osm';
+      // Restore saved basemap preference (defaulting to Positron Minimalist)
+      let initialBasemapId = 'positron';
       try {
-        const saved = localStorage.getItem('ghostpace.basemap.v1');
+        const saved = localStorage.getItem('ghostpace.basemap.v2');
         if (saved && BASEMAPS.some((b) => b.id === saved)) {
           initialBasemapId = saved;
         }
       } catch {}
       setSelectedBasemap(initialBasemapId);
+      currentBasemapIdRef.current = initialBasemapId;
 
       const basemapConfig = BASEMAPS.find((b) => b.id === initialBasemapId) || BASEMAPS[0];
-      const initialTileLayer = L.tileLayer(basemapConfig.url, basemapConfig.options).addTo(map);
+      const initialTileLayer = createBasemapLayer(L, basemapConfig).addTo(map);
+      if (typeof initialTileLayer.bringToBack === 'function') {
+        initialTileLayer.bringToBack();
+      }
       activeTileLayerRef.current = initialTileLayer;
 
       // Polyline halo (Strava peach glow)
@@ -224,6 +262,7 @@ export function MapView({
       });
 
       mapInstanceRef.current = map;
+      (window as any)._map = map;
       setMapReady(true);
     }
 
@@ -241,6 +280,7 @@ export function MapView({
   // Update Basemap Layer dynamically
   React.useEffect(() => {
     if (!mapInstanceRef.current || !mapReady) return;
+    if (currentBasemapIdRef.current === selectedBasemap && activeTileLayerRef.current) return;
     const map = mapInstanceRef.current;
     const L = leafletRef.current || (window as any).L;
     if (!L) return;
@@ -251,12 +291,15 @@ export function MapView({
       map.removeLayer(activeTileLayerRef.current);
     }
 
-    const newTileLayer = L.tileLayer(basemapConfig.url, basemapConfig.options).addTo(map);
-    newTileLayer.bringToBack();
+    const newTileLayer = createBasemapLayer(L, basemapConfig).addTo(map);
+    if (typeof newTileLayer.bringToBack === 'function') {
+      newTileLayer.bringToBack();
+    }
     activeTileLayerRef.current = newTileLayer;
+    currentBasemapIdRef.current = selectedBasemap;
 
     try {
-      localStorage.setItem('ghostpace.basemap.v1', selectedBasemap);
+      localStorage.setItem('ghostpace.basemap.v2', selectedBasemap);
     } catch {}
   }, [selectedBasemap, mapReady]);
 
@@ -521,8 +564,8 @@ export function MapView({
 
         <motion.button
           type="button"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
           aria-pressed={isDrawingMode}
           onClick={() => {
             if (isDrawingMode) {
@@ -534,14 +577,14 @@ export function MapView({
             }
           }}
           className={cn(
-            'inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold shadow-md backdrop-blur-xl transition-all duration-200',
+            'inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm backdrop-blur-md transition-all duration-150',
             isDrawingMode
-              ? 'bg-gradient-to-r from-[#fc5200] to-[#e34900] text-white shadow-[#fc5200]/30 ring-2 ring-[#ffd8c7]'
-              : 'border border-[#e6e6e1] bg-white/90 text-[#1d1d1f] hover:bg-[#fff2eb]'
+              ? 'bg-[#fc5200] text-white shadow-md shadow-[#fc5200]/25 ring-2 ring-[#ffd8c7]'
+              : 'notion-card text-[#37352f] hover:bg-[#f1f0ec]'
           )}
         >
           <Pencil className="size-3.5" />
-          <span>{isDrawingMode ? 'Annuler le dessin' : 'Dessiner au crayon'}</span>
+          <span>{isDrawingMode ? 'Annuler le tracé' : 'Tracé au crayon'}</span>
         </motion.button>
       </div>
 
@@ -550,43 +593,43 @@ export function MapView({
         <div className="relative">
           <motion.button
             type="button"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
             aria-label="Changer le fond de carte"
             aria-expanded={isLayersOpen}
             onClick={() => setIsLayersOpen((prev) => !prev)}
             className={cn(
-              'inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold shadow-md backdrop-blur-xl transition-all duration-200',
+              'inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm backdrop-blur-md transition-all duration-150',
               isLayersOpen
-                ? 'border-[#fc5200] bg-gradient-to-r from-[#fc5200] to-[#e34900] text-white shadow-[#fc5200]/25'
-                : 'border border-[#e6e6e1] bg-white/90 text-[#1d1d1f] hover:bg-[#fff2eb]'
+                ? 'bg-[#fc5200] text-white shadow-md shadow-[#fc5200]/25'
+                : 'notion-card text-[#37352f] hover:bg-[#f1f0ec]'
             )}
           >
             <Layers className={cn('size-3.5', isLayersOpen ? 'text-white' : 'text-[#fc5200]')} />
             <span>Fond de carte</span>
             <span
               className={cn(
-                'rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider',
-                isLayersOpen ? 'bg-white/20 text-white' : 'bg-[#f4f4f0] text-[#484848]'
+                'rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                isLayersOpen ? 'bg-white/20 text-white' : 'bg-[#f1f0ec] text-[#787774]'
               )}
             >
-              {BASEMAPS.find((b) => b.id === selectedBasemap)?.shortLabel || 'OSM'}
+              {BASEMAPS.find((b) => b.id === selectedBasemap)?.shortLabel || 'Minimal'}
             </span>
           </motion.button>
 
           <AnimatePresence>
             {isLayersOpen && (
               <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-2 w-64 rounded-2xl border border-[#e6e6e1] bg-white/95 p-1.5 shadow-2xl backdrop-blur-xl"
+                exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                transition={{ duration: 0.12 }}
+                className="notion-card absolute right-0 top-full mt-1.5 w-64 p-1.5 shadow-lg backdrop-blur-md"
               >
-                <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8c8c85]">
-                  Fonds de carte certifiés (sans filigrane)
+                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#787774]">
+                  Fonds cartographiques calibrés
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {BASEMAPS.map((b) => {
                     const isSelected = selectedBasemap === b.id;
                     return (
@@ -598,20 +641,20 @@ export function MapView({
                           setIsLayersOpen(false);
                         }}
                         className={cn(
-                          'flex w-full items-start justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors',
+                          'flex w-full items-start justify-between rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors',
                           isSelected
-                            ? 'bg-[#fff2eb] text-[#fc5200] font-semibold ring-1 ring-[#ffd8c7]'
-                            : 'text-[#1d1d1f] hover:bg-[#f8f8f6]'
+                            ? 'bg-[#fff2eb] text-[#fc5200] font-semibold border border-[#ffd8c7]'
+                            : 'text-[#37352f] hover:bg-[#f1f0ec]'
                         )}
                       >
                         <div className="pr-2">
                           <div className="font-semibold leading-tight">{b.label}</div>
-                          <div className="mt-0.5 text-[10px] font-normal text-[#8c8c85] leading-normal">
+                          <div className="mt-0.5 text-[10px] font-normal text-[#787774] leading-normal">
                             {b.description}
                           </div>
                         </div>
                         {isSelected && (
-                          <span className="mt-1 inline-block size-2 shrink-0 rounded-full bg-[#fc5200] shadow-[0_0_8px_#fc5200]" />
+                          <span className="mt-1 inline-block size-2 shrink-0 rounded-full bg-[#fc5200]" />
                         )}
                       </button>
                     );
@@ -644,14 +687,15 @@ export function MapView({
         {drawnPoints ? (
           <motion.div
             key="drawn-actions"
-            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            initial={{ opacity: 0, y: 15, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            className="absolute bottom-5 left-1/2 z-[500] flex -translate-x-1/2 items-center gap-2.5 rounded-full border border-[#e6e6e1] bg-white/95 p-1.5 shadow-xl backdrop-blur-xl"
+            exit={{ opacity: 0, y: 15, scale: 0.96 }}
+            className="notion-card absolute bottom-5 left-1/2 z-[500] flex -translate-x-1/2 items-center gap-2 p-1.5 shadow-lg backdrop-blur-md"
           >
             <Button
               variant="outline"
               size="sm"
+              className="text-xs font-semibold rounded-lg"
               onClick={() => {
                 setDrawnPoints(null);
                 if (drawingLayerRef.current) drawingLayerRef.current.setLatLngs([]);
@@ -660,7 +704,7 @@ export function MapView({
               <RotateCcw className="size-3.5" />
               <span>Recommencer</span>
             </Button>
-            <Button size="sm" onClick={handleValidateDrawing}>
+            <Button size="sm" className="text-xs font-bold rounded-lg" onClick={handleValidateDrawing}>
               <Check className="size-3.5" />
               <span>Valider le tracé</span>
             </Button>
@@ -673,7 +717,7 @@ export function MapView({
             exit={{ opacity: 0, y: 15 }}
             className="pointer-events-none absolute bottom-5 left-1/2 z-[500] -translate-x-1/2 px-4"
           >
-            <p className="rounded-full border border-[#ffd8c7] bg-[#fff2eb]/95 px-5 py-2.5 text-center text-xs font-semibold text-[#c43e00] shadow-lg backdrop-blur-xl">
+            <p className="notion-callout px-4 py-2 text-center text-xs font-medium shadow-md">
               Mode Tracé Libre : Dessinez votre itinéraire d’un seul trait, il sera vectorisé automatiquement.
             </p>
           </motion.div>
@@ -690,17 +734,17 @@ export function MapView({
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.96 }}
-                className="flex w-[24rem] max-w-[calc(100vw-2rem)] items-start gap-2.5 rounded-2xl border border-[#e6e6e1] bg-white/95 py-2.5 pl-4 pr-2.5 text-xs font-medium text-[#1d1d1f] shadow-xl backdrop-blur-xl"
+                className="notion-card flex w-[24rem] max-w-[calc(100vw-2rem)] items-start gap-2.5 p-3 text-xs font-medium text-[#37352f] shadow-lg backdrop-blur-md"
               >
                 <Sparkles className="size-4 shrink-0 text-[#fc5200] mt-0.5" />
                 <span className="flex-1 leading-relaxed">
-                  <strong>Ajustement vectoriel</strong> : Déplacez un point pour recalculer instantanément le profil altimétrique et la vitesse.
+                  <strong>Ajustement vectoriel</strong> : Déplacez un point pour recalculer instantanément le profil altimétrique et l’allure.
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowTip(false)}
                   aria-label="Masquer l’astuce"
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full text-[#666660] hover:bg-[#f3f3f0] transition-colors"
+                  className="flex size-5 shrink-0 items-center justify-center rounded text-[#787774] hover:bg-[#f1f0ec] transition-colors"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -710,7 +754,7 @@ export function MapView({
               variant="outline"
               size="sm"
               onClick={onClear}
-              className="shadow-md hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors text-xs font-semibold uppercase tracking-wider"
+              className="shadow-sm hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors text-xs font-semibold uppercase tracking-wider rounded-lg"
             >
               <Trash2 className="size-3.5" />
               <span>Réinitialiser la trace</span>
@@ -723,7 +767,7 @@ export function MapView({
             animate={{ opacity: 1, y: 0 }}
             className="pointer-events-none absolute inset-x-0 bottom-5 z-[500] flex justify-center px-4"
           >
-            <p className="w-[22rem] max-w-full rounded-2xl border border-[#e6e6e1] bg-white/95 px-4 py-2.5 text-center text-xs font-medium text-[#666660] shadow-lg backdrop-blur-xl">
+            <p className="notion-card w-[22rem] max-w-full px-3.5 py-2 text-center text-xs font-medium text-[#787774] shadow-sm backdrop-blur-md">
               Cliquez sur la carte pour définir les points de passage de votre session.
             </p>
           </motion.div>

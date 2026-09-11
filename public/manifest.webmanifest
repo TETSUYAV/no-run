@@ -1,7 +1,7 @@
 {
-  "name": "GhostPace — Télémétrie d’Élite & GPX",
-  "short_name": "GhostPace",
-  "description": "Générateur de traces GPX furtives pour Strava avec télémétrie altimétrique SRTM et asservissement physiologique.",
+  "name": "No Run — Faux Tracés Strava & GPX",
+  "short_name": "No Run",
+  "description": "Générateur de faux tracés Strava sans courir avec télémétrie altimétrique SRTM et asservissement physiologique.",
   "start_url": "/create",
   "scope": "/",
   "display": "standalone",

@@ -54,7 +54,7 @@ export function CookieBanner() {
             <div className="flex-1 text-xs">
               <p className="font-semibold text-[#1d1d1f]">Confidentialité & Stockage Local</p>
               <p className="mt-1 text-[11px] text-[#666660] leading-relaxed">
-                GhostPace utilise uniquement le stockage local pour préserver vos brouillons de tracé GPX. Aucun cookie publicitaire tiers n’est utilisé.{' '}
+                No Run utilise uniquement le stockage local pour préserver vos brouillons de tracé GPX. Aucun cookie publicitaire tiers n’est utilisé.{' '}
                 <Link href="/privacy" className="underline text-[#fc5200] hover:text-[#cc4200]">
                   En savoir plus
                 </Link>.
