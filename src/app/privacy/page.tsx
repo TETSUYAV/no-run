@@ -64,7 +64,7 @@ export default function PrivacyPage() {
             <h2 className="text-base font-bold text-[#37352f]">5. Contact</h2>
             <p className="mt-2 text-xs text-[#787774]">
               Pour toute question relative à cette politique ou à l’exercice de vos droits, contactez l’équipe 
-              à l’adresse : <code>contact@norun.app</code>.
+              à l’adresse : <code>contact@no-run.com</code>.
             </p>
           </section>
         </div>

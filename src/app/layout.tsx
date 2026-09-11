@@ -11,7 +11,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://norun.app'),
+  metadataBase: new URL('https://no-run.com'),
   title: {
     default: 'No Run — Faux Tracés Strava & Télémétrie GPX',
     template: '%s | No Run',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://norun.app',
+    url: 'https://no-run.com',
     title: 'No Run — Faux Tracés Strava & Télémétrie GPX',
     description:
       'Générez de faux tracés Strava ultra-réalistes sans quitter votre canapé : calibration GAP, altimétrie SRTM et signatures Garmin/Apple Watch.',

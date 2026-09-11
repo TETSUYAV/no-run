@@ -1,0 +1,12 @@
+no-run.com, www.no-run.com {
+    reverse_proxy norun-app:3000
+
+    # Compression
+    encode zstd gzip
+
+    # Logging
+    log {
+        output stdout
+        format console
+    }
+}
