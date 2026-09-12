@@ -69,7 +69,7 @@ export function PricingView() {
           <span>100% Sans Abonnement • Paiement Unique</span>
         </div>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-[#37352f] sm:text-4xl">
-          Des crédits valables à vie. Zéro reconduction.
+          Des crédits valables à vie
         </h1>
         <p className="mt-3 text-sm text-[#787774] leading-relaxed">
           Pas de prélèvement mensuel surprise ni de compte à résilier. 
@@ -113,7 +113,7 @@ export function PricingView() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="size-4 text-[#fc5200] stroke-[2.5]" />
-                <span>Zéro abonnement, zéro engagement</span>
+                <span>Sans abonnement ni engagement</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Check className="size-4 text-[#fc5200] stroke-[2.5]" />
