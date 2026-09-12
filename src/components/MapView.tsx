@@ -49,31 +49,6 @@ export const BASEMAPS: BasemapConfig[] = [
     type: 'maplibre',
     url: 'https://tiles.openfreemap.org/styles/bright',
   },
-  {
-    id: 'topo',
-    label: 'Relief & Outdoor',
-    shortLabel: 'Relief',
-    description: 'Courbes de niveau & topographie (Esri)',
-    type: 'raster',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    options: {
-      attribution: 'Tiles &copy; Esri & contributors',
-      maxZoom: 19,
-    },
-  },
-  {
-    id: 'osm',
-    label: 'Standard OSM',
-    shortLabel: 'OSM',
-    description: 'Réseau routier & sentiers piétons détaillés',
-    type: 'raster',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    },
-  },
 ];
 
 function createBasemapLayer(L: any, config: BasemapConfig) {
