@@ -6,6 +6,7 @@ import {
   createOrGetUser,
   verifySessionToken,
   addCredits,
+  processCompletedCheckoutSession,
 } from '@/lib/userStore';
 
 export async function POST(req: NextRequest) {
@@ -94,6 +95,57 @@ export async function POST(req: NextRequest) {
     console.error('Checkout error:', err);
     return NextResponse.json(
       { message: err?.message || 'Erreur lors de la création de la session de paiement.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const sessionId = searchParams.get('session_id');
+
+    if (!sessionId) {
+      return NextResponse.json({ message: 'session_id requis' }, { status: 400 });
+    }
+
+    if (!stripe) {
+      return NextResponse.json({ message: 'Stripe non configuré' }, { status: 400 });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!session) {
+      return NextResponse.json({ message: 'Session introuvable' }, { status: 404 });
+    }
+
+    if (session.payment_status !== 'paid') {
+      return NextResponse.json({
+        paid: false,
+        status: session.payment_status,
+      });
+    }
+
+    const result = await processCompletedCheckoutSession(session as any);
+
+    return NextResponse.json({
+      paid: true,
+      processed: result.processed,
+      alreadyProcessed: result.alreadyProcessed,
+      creditsAdded: result.creditsAdded,
+      user: result.user
+        ? {
+            id: result.user.id,
+            email: result.user.email,
+            credits: result.user.credits,
+            freeTrialAvailable: result.user.freeTrialAvailable,
+            subscription: result.user.subscription,
+          }
+        : null,
+    });
+  } catch (err: any) {
+    console.error('Verify checkout error:', err);
+    return NextResponse.json(
+      { message: err?.message || 'Erreur lors de la vérification du paiement.' },
       { status: 500 }
     );
   }

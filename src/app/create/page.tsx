@@ -97,9 +97,30 @@ export default function CreatePage() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const payment = params.get('payment');
+      const sessionId = params.get('session_id');
+
       if (payment === 'success' || payment === 'mock_success') {
         setPaymentBanner('Paiement validé ! Vos crédits sont activés et prêts à l’emploi.');
-        refreshUser();
+
+        if (sessionId) {
+          fetch(`/api/checkout?session_id=${encodeURIComponent(sessionId)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.user) {
+                setUser(data.user);
+              }
+              refreshUser();
+            })
+            .catch(() => {
+              refreshUser();
+            });
+        } else {
+          refreshUser();
+        }
+
+        // Nettoyage propre de l'URL sans rechargement
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
       }
     }
   }, [refreshUser]);

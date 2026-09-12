@@ -173,6 +173,61 @@ export async function updateSubscription(
   return user;
 }
 
+// In-memory set of processed sessions for fallback
+const processedSessionsSet = new Set<string>();
+
+export async function processCompletedCheckoutSession(session: {
+  id: string;
+  mode?: string | null;
+  metadata?: Record<string, string> | null;
+  customer?: string | null;
+}): Promise<{ processed: boolean; alreadyProcessed: boolean; creditsAdded: number; user: UserAccount | null }> {
+  const sessionId = session.id;
+  const userId = session.metadata?.userId;
+  const credits = parseInt(session.metadata?.credits || '0', 10);
+  const productId = session.metadata?.productId as any;
+  const customerId = session.customer ? String(session.customer) : undefined;
+
+  if (!userId) {
+    return { processed: false, alreadyProcessed: false, creditsAdded: 0, user: null };
+  }
+
+  // Idempotency: verify session hasn't been credited yet
+  if (redis) {
+    const isNew = await redis.set(`norun:processed:${sessionId}`, '1', {
+      nx: true,
+      ex: 30 * 24 * 60 * 60, // 30 jours
+    });
+    if (!isNew) {
+      const user = await getUserById(userId);
+      return { processed: true, alreadyProcessed: true, creditsAdded: 0, user };
+    }
+  } else {
+    if (processedSessionsSet.has(sessionId)) {
+      const user = await getUserById(userId);
+      return { processed: true, alreadyProcessed: true, creditsAdded: 0, user };
+    }
+    processedSessionsSet.add(sessionId);
+  }
+
+  if (session.mode === 'payment' && credits > 0) {
+    const updated = await addCredits(userId, credits);
+    return { processed: true, alreadyProcessed: false, creditsAdded: credits, user: updated };
+  } else if (session.mode === 'subscription') {
+    await updateSubscription(userId, {
+      status: 'active',
+      plan: productId,
+      stripeCustomerId: customerId,
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+    const updated = await addCredits(userId, 30);
+    return { processed: true, alreadyProcessed: false, creditsAdded: 30, user: updated };
+  }
+
+  const user = await getUserById(userId);
+  return { processed: true, alreadyProcessed: false, creditsAdded: 0, user };
+}
+
 export async function consumeExportCredit(userId: string): Promise<{
   success: boolean;
   reason: 'free_trial' | 'credit' | 'subscription' | 'insufficient_funds';

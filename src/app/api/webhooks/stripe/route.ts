@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { addCredits, updateSubscription, getUserById } from '@/lib/userStore';
+import { processCompletedCheckoutSession, addCredits, updateSubscription } from '@/lib/userStore';
 
 export async function POST(req: NextRequest) {
   if (!stripe) {
@@ -8,48 +8,44 @@ export async function POST(req: NextRequest) {
   }
 
   const signature = req.headers.get('stripe-signature');
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const rawSecrets = process.env.STRIPE_WEBHOOK_SECRET || '';
 
-  if (!signature || !webhookSecret) {
+  if (!signature || !rawSecrets) {
     console.error('Stripe webhook signature or secret missing');
     return NextResponse.json({ message: 'Signature ou secret manquant.' }, { status: 400 });
   }
 
-  let event: any;
+  const secrets = rawSecrets.split(',').map((s) => s.trim()).filter(Boolean);
+  let event: any = null;
+  let lastErr: any = null;
+
   try {
     const rawBody = await req.text();
-    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    for (const secret of secrets) {
+      try {
+        event = stripe.webhooks.constructEvent(rawBody, signature, secret);
+        break;
+      } catch (err: any) {
+        lastErr = err;
+      }
+    }
   } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
-    return NextResponse.json({ message: `Webhook error: ${err.message}` }, { status: 400 });
+    lastErr = err;
+  }
+
+  if (!event) {
+    console.error('Webhook signature verification failed:', lastErr?.message);
+    return NextResponse.json({ message: `Webhook error: ${lastErr?.message}` }, { status: 400 });
   }
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as any;
-        const userId = session.metadata?.userId;
-        const productId = session.metadata?.productId;
-        const credits = parseInt(session.metadata?.credits || '0', 10);
-        const customerId = session.customer as string;
-
-        if (userId) {
-          if (session.mode === 'payment') {
-            // Achat de pack de crédits à vie
-            await addCredits(userId, credits);
-            console.log(`[Stripe Webhook] ${credits} crédits ajoutés à l'utilisateur ${userId}`);
-          } else if (session.mode === 'subscription') {
-            // Rétrocompatibilité abonnement
-            await updateSubscription(userId, {
-              status: 'active',
-              plan: productId,
-              stripeCustomerId: customerId,
-              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            });
-            await addCredits(userId, 30);
-            console.log(`[Stripe Webhook] Abonnement activé + 30 crédits pour ${userId}`);
-          }
-        }
+        const result = await processCompletedCheckoutSession(session);
+        console.log(
+          `[Stripe Webhook] Session ${session.id} traitée. Idempotent: ${result.alreadyProcessed}, Crédits ajoutés: ${result.creditsAdded}`
+        );
         break;
       }
 
