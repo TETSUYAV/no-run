@@ -63,6 +63,24 @@ export function SiteHeader() {
           {/* Notion Document Nav Links */}
           <nav className="hidden items-center gap-2 sm:gap-3 md:flex">
             <Link
+              href="/create"
+              className={cn(
+                'relative rounded-xl px-4 py-2 text-xs sm:text-[13px] font-medium transition-colors duration-150',
+                pathname === '/create'
+                  ? 'text-[#fc5200] font-semibold'
+                  : 'text-[#787774] hover:text-[#37352f] hover:bg-[#f1f0ec]'
+              )}
+            >
+              Faire un tracé
+              {pathname === '/create' && (
+                <motion.div
+                  layoutId="headerActiveIndicator"
+                  className="absolute inset-0 rounded-xl bg-[#fff3ec] border border-[#ffd8c7]/60 -z-10"
+                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                />
+              )}
+            </Link>
+            <Link
               href="/pricing"
               className={cn(
                 'relative rounded-xl px-4 py-2 text-xs sm:text-[13px] font-medium transition-colors duration-150',
@@ -191,6 +209,13 @@ export function SiteHeader() {
               className="mt-2 rounded-2xl border border-[#e8e7e3] bg-white/95 p-3.5 shadow-xl backdrop-blur-xl md:hidden"
             >
               <nav className="flex flex-col gap-1.5">
+                <Link
+                  href="/create"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-lg px-3 py-2 text-xs font-medium text-[#37352f] transition-colors hover:bg-[#f1f0ec]"
+                >
+                  Faire un tracé
+                </Link>
                 <Link
                   href="/pricing"
                   onClick={() => setMobileMenuOpen(false)}
