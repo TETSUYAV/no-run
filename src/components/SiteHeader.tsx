@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sparkles, Activity, Gift, Crown, User as UserIcon } from 'lucide-react';
+import { Menu, X, Sparkles, Activity, Gift, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -71,7 +71,7 @@ export function SiteHeader() {
                   : 'text-[#787774] hover:text-[#37352f] hover:bg-[#f1f0ec]'
               )}
             >
-              Accès Libre
+              Tarifs
               {pathname === '/pricing' && (
                 <motion.div
                   layoutId="headerActiveIndicator"
@@ -101,50 +101,61 @@ export function SiteHeader() {
           </nav>
 
           {/* Right side telemetry & action buttons */}
-          <div className="hidden items-center gap-3 sm:gap-4 md:flex">
+          <div className="hidden items-center gap-2.5 sm:gap-3 md:flex">
+            {/* Compteur de crédits */}
             {user ? (
-              <div className="flex items-center gap-2">
-                {user.credits > 0 ? (
-                  <Link
-                    href="/pricing"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fff2eb] border border-[#ffd8c7] text-xs font-semibold text-[#fc5200] transition-colors hover:bg-[#ffe5d6]"
-                  >
-                    <span>🛋️</span>
-                    <span>{user.credits} crédit{user.credits > 1 ? 's' : ''}</span>
-                  </Link>
-                ) : user.freeTrialAvailable ? (
-                  <Link
-                    href="/create"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs font-semibold text-[#059669] transition-colors hover:bg-[#d1fae5]"
-                  >
-                    <Gift className="size-3.5" />
-                    <span>1 tracé offert</span>
-                  </Link>
-                ) : (
-                  <Link
-                    href="/pricing"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#f7f6f3] border border-[#e8e7e3] text-xs font-medium text-[#787774] hover:text-[#fc5200] transition-colors"
-                  >
-                    <span>0 crédit (Recharger)</span>
-                  </Link>
+              <Link
+                href="/pricing"
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all',
+                  user.credits > 0
+                    ? 'bg-[#fff2eb] border-[#ffd8c7] text-[#fc5200] hover:bg-[#ffe5d6]'
+                    : user.freeTrialAvailable
+                    ? 'bg-[#ecfdf5] border-[#a7f3d0] text-[#059669] hover:bg-[#d1fae5]'
+                    : 'bg-[#f7f6f3] border-[#e8e7e3] text-[#787774] hover:text-[#fc5200]'
                 )}
-
-                <Link
-                  href="/connexion"
-                  className="rounded-xl border border-[#e8e7e3] bg-white px-3 py-1.5 text-xs font-medium text-[#787774] hover:text-[#37352f] transition-all hover:bg-[#f7f6f3]"
-                  title={user.email}
-                >
-                  <UserIcon className="size-3.5" />
-                </Link>
-              </div>
+                title="Solde de crédits — Cliquer pour recharger"
+              >
+                {user.credits > 0 ? (
+                  <>
+                    <span>🛋️</span>
+                    <span className="telemetry-mono font-bold text-[#fc5200]">{user.credits}</span>
+                    <span className="text-[11px] font-medium text-[#787774]">
+                      crédit{user.credits > 1 ? 's' : ''}
+                    </span>
+                  </>
+                ) : user.freeTrialAvailable ? (
+                  <>
+                    <Gift className="size-3.5 text-[#059669]" />
+                    <span>1 tracé offert</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🛋️</span>
+                    <span className="telemetry-mono font-bold">0</span>
+                    <span className="text-[11px] text-[#787774]">crédit</span>
+                  </>
+                )}
+              </Link>
             ) : (
               <Link
-                className="rounded-xl border border-[#e8e7e3] bg-white px-4 py-2 text-xs sm:text-[13px] font-medium text-[#37352f] transition-all hover:bg-[#f7f6f3] hover:border-[#d6d5cf] active:scale-95"
-                href="/connexion"
+                href="/pricing"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#fff2eb] border border-[#ffd8c7] text-xs font-medium text-[#fc5200] hover:bg-[#ffe5d6] transition-all"
+                title="1er tracé GPX offert sans carte bancaire"
               >
-                Connexion
+                <Gift className="size-3.5 text-[#fc5200]" />
+                <span className="font-semibold">1 offert</span>
               </Link>
             )}
+
+            {/* Bouton de connexion */}
+            <Link
+              href="/connexion"
+              className="flex items-center gap-1.5 rounded-xl border border-[#e8e7e3] bg-white px-3.5 py-1.5 text-xs sm:text-[13px] font-medium text-[#37352f] transition-all hover:bg-[#f7f6f3] hover:border-[#d6d5cf] active:scale-95"
+            >
+              <UserIcon className="size-3.5 text-[#787774]" />
+              <span>{user ? 'Mon Compte' : 'Connexion'}</span>
+            </Link>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
               <Link
@@ -185,7 +196,7 @@ export function SiteHeader() {
                   onClick={() => setMobileMenuOpen(false)}
                   className="rounded-lg px-3 py-2 text-xs font-medium text-[#37352f] transition-colors hover:bg-[#f1f0ec]"
                 >
-                  Tarifs & Accès Libre
+                  Tarifs
                 </Link>
                 <Link
                   href="/comment-importer"
@@ -194,13 +205,35 @@ export function SiteHeader() {
                 >
                   Guide Déploiement Strava
                 </Link>
+
+                <div className="my-1 border-t border-[#f1f0ec]" />
+
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-[#faf9f5] border border-[#e8e7e3]">
+                  <span className="text-xs text-[#787774]">Solde de crédits</span>
+                  {user ? (
+                    <Link
+                      href="/pricing"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-xs font-bold text-[#fc5200] telemetry-mono"
+                    >
+                      {user.credits} crédit{user.credits > 1 ? 's' : ''}
+                    </Link>
+                  ) : (
+                    <span className="text-xs font-semibold text-emerald-600">
+                      1 offert
+                    </span>
+                  )}
+                </div>
+
                 <Link
                   href="/connexion"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-lg px-3 py-2 text-xs font-medium text-[#37352f] transition-colors hover:bg-[#f1f0ec]"
+                  className="rounded-lg px-3 py-2 text-xs font-medium text-[#37352f] transition-colors hover:bg-[#f1f0ec] flex items-center justify-between"
                 >
-                  Session Ouverte
+                  <span>{user ? 'Mon Compte' : 'Connexion'}</span>
+                  <UserIcon className="size-3.5 text-[#787774]" />
                 </Link>
+
                 <Link
                   href="/create"
                   onClick={() => setMobileMenuOpen(false)}

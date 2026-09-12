@@ -26,7 +26,7 @@ export function SiteFooter() {
               Tracer une sortie
             </Link>
             <Link href="/pricing" className="hover:text-[#fc5200] transition-colors">
-              Tarifs & Accès
+              Tarifs
             </Link>
             <Link href="/comment-importer" className="hover:text-[#fc5200] transition-colors">
               Guide Strava
