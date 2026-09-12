@@ -98,7 +98,7 @@ export default function CreatePage() {
       const params = new URLSearchParams(window.location.search);
       const payment = params.get('payment');
       if (payment === 'success' || payment === 'mock_success') {
-        setPaymentBanner('🎉 Paiement validé ! Vos crédits sont activés et prêts à l’emploi.');
+        setPaymentBanner('Paiement validé ! Vos crédits sont activés et prêts à l’emploi.');
         refreshUser();
       }
     }
@@ -331,8 +331,8 @@ export default function CreatePage() {
 
       setExportSuccessMessage(
         creditReason === 'free_trial'
-          ? '🎉 Votre 1er tracé offert a été exporté ! Prêt pour Strava.'
-          : '✅ Tracé GPX exporté avec succès !'
+          ? 'Votre 1er tracé offert a été exporté ! Prêt pour Strava.'
+          : 'Tracé GPX exporté avec succès !'
       );
       setTimeout(() => setExportSuccessMessage(null), 5000);
     } catch (err: any) {

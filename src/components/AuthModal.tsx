@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Sparkles, Gift, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Sparkles, Gift, ArrowRight, Loader2, Lock } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface AuthModalProps {
@@ -114,8 +114,9 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             </Button>
           </form>
 
-          <p className="mt-4 text-[11px] text-[#9b9a97]">
-            🔒 Aucun spam. Vos crédits sont conservés et utilisables à tout moment.
+          <p className="mt-4 text-[11px] text-[#9b9a97] flex items-center justify-center gap-1.5">
+            <Lock className="size-3 text-[#9b9a97]" />
+            <span>Aucun spam. Vos crédits sont conservés et utilisables à tout moment.</span>
           </p>
         </div>
       </div>

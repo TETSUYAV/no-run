@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sparkles, Activity, Gift, User as UserIcon } from 'lucide-react';
+import { Menu, X, Sparkles, Activity, Gift, Zap, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
@@ -136,7 +136,7 @@ export function SiteHeader() {
               >
                 {user.credits > 0 ? (
                   <>
-                    <span>🛋️</span>
+                    <Zap className="size-3 text-[#fc5200]" />
                     <span className="telemetry-mono font-bold text-[#fc5200]">{user.credits}</span>
                     <span className="text-[11px] font-medium text-[#787774]">
                       crédit{user.credits > 1 ? 's' : ''}
@@ -149,7 +149,7 @@ export function SiteHeader() {
                   </>
                 ) : (
                   <>
-                    <span>🛋️</span>
+                    <Zap className="size-3 text-[#787774]" />
                     <span className="telemetry-mono font-bold">0</span>
                     <span className="text-[11px] text-[#787774]">crédit</span>
                   </>

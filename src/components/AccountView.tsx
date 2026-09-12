@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { User, Gift, Zap, LogOut, ArrowRight, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { User, Gift, Zap, LogOut, ArrowRight, Loader2, Sparkles, CheckCircle2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export function AccountView() {
@@ -207,8 +207,9 @@ export function AccountView() {
             </Button>
           </form>
 
-          <p className="mt-4 text-[11px] text-[#9b9a97]">
-            🔒 Sans mot de passe complexe. Aucun débit sans votre accord explicite.
+          <p className="mt-4 text-[11px] text-[#9b9a97] flex items-center justify-center gap-1.5">
+            <Lock className="size-3 text-[#9b9a97]" />
+            <span>Sans mot de passe complexe. Aucun débit sans votre accord explicite.</span>
           </p>
         </div>
       )}

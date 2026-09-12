@@ -12,6 +12,7 @@ import {
   Calendar,
   Magnet,
   ShieldCheck,
+  ChevronDown,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ActivityDraft, Sport } from '@/lib/types';
@@ -296,8 +297,8 @@ export function SidebarControls({
                     </option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-[#787774]">
-                  ▼
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                  <ChevronDown className="size-3.5 text-[#787774]" />
                 </div>
               </div>
             </Field>

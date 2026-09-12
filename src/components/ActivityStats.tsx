@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Route, Timer, Mountain, Zap } from 'lucide-react';
+import { Route, Timer, Mountain, Zap, BarChart3 } from 'lucide-react';
 import { Sport } from '@/lib/types';
 import { formatDistance, formatDuration, formatPaceValue } from '@/lib/constants';
 
@@ -66,7 +66,7 @@ export function ActivityStats({
       {/* Cockpit header */}
       <div className="mb-2.5 flex items-center justify-between px-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs">📊</span>
+          <BarChart3 className="size-3.5 text-[#787774]" />
           <span className="text-[11px] font-semibold uppercase tracking-wider text-[#787774]">
             Télémétrie de Course
           </span>
