@@ -47,7 +47,7 @@ export function PaywallModal({ isOpen, onClose, userEmail }: PaywallModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
       <div className="relative w-full max-w-xl overflow-hidden rounded-2xl bg-[#faf9f5] p-6 sm:p-8 shadow-2xl border border-[#e9e8e4] text-[#37352f]">
         <button
           onClick={onClose}

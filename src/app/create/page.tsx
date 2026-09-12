@@ -386,7 +386,7 @@ export default function CreatePage() {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col pt-2 lg:flex-row lg:pt-[11px]">
+      <div className="flex min-h-0 flex-1 flex-col pt-2 lg:flex-row lg:pt-[11px] isolate">
         {/* Map View */}
         <div className="relative h-[45vh] shrink-0 lg:h-full lg:flex-1">
           <ErrorBoundary fallbackTitle="Erreur d’affichage du Studio de Tracé">
