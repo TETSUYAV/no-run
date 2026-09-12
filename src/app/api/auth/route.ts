@@ -5,6 +5,24 @@ import {
   createSessionToken,
   verifySessionToken,
 } from '@/lib/userStore';
+import { isValidEmailFormat, isDisposableEmail } from '@/lib/emailValidation';
+
+// Rate limiting IP pour la connexion/création de compte (max 15 requêtes / min par IP)
+const authIpCounts = new Map<string, { count: number; resetTime: number }>();
+
+function checkAuthRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = authIpCounts.get(ip);
+  if (!entry || now > entry.resetTime) {
+    authIpCounts.set(ip, { count: 1, resetTime: now + 60_000 });
+    return true;
+  }
+  if (entry.count >= 15) {
+    return false;
+  }
+  entry.count += 1;
+  return true;
+}
 
 export async function GET(req: NextRequest) {
   const token = req.cookies.get('norun_session')?.value;
@@ -40,12 +58,29 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : '127.0.0.1';
+
+    if (!checkAuthRateLimit(ip)) {
+      return NextResponse.json(
+        { message: 'Trop de tentatives de connexion. Veuillez patienter une minute.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      );
+    }
+
     const body = await req.json();
     const email = body.email?.trim().toLowerCase();
 
-    if (!email || !email.includes('@') || email.length < 5) {
+    if (!email || !isValidEmailFormat(email)) {
       return NextResponse.json(
-        { message: 'Veuillez renseigner une adresse email valide.' },
+        { message: 'Veuillez renseigner une adresse email valide (ex: contact@exemple.fr).' },
+        { status: 400 }
+      );
+    }
+
+    if (isDisposableEmail(email)) {
+      return NextResponse.json(
+        { message: 'Les adresses email temporaires ou jetables ne sont pas autorisées.' },
         { status: 400 }
       );
     }
