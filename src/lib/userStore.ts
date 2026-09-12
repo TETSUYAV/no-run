@@ -1,11 +1,24 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { Redis } from '@upstash/redis';
 import { UserAccount, UserSubscription } from './types';
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), '.data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const SESSION_SECRET = process.env.SESSION_SECRET || 'norun-dev-secret-key-32-chars-long-min!';
+
+// Upstash Redis / Vercel KV Client
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+export const redis = (redisUrl && redisToken)
+  ? new Redis({ url: redisUrl, token: redisToken })
+  : null;
+
+export function getStorageMode(): 'redis' | 'disk' {
+  return redis ? 'redis' : 'disk';
+}
 
 // In-memory fallback
 let inMemoryUsers: Map<string, UserAccount> = new Map();
@@ -48,8 +61,49 @@ function saveUsers(usersMap: Map<string, UserAccount>) {
   }
 }
 
+async function saveUserToStore(user: UserAccount): Promise<void> {
+  if (redis) {
+    await Promise.all([
+      redis.set(`norun:user:${user.id}`, user),
+      redis.set(`norun:email:${user.email.toLowerCase()}`, user.id),
+    ]);
+    return;
+  }
+
+  const users = loadUsers();
+  users.set(user.id, user);
+  saveUsers(users);
+}
+
+export async function getUserById(id: string): Promise<UserAccount | null> {
+  if (redis) {
+    try {
+      const user = await redis.get<UserAccount>(`norun:user:${id}`);
+      return user || null;
+    } catch (err) {
+      console.error('Redis getUserById error:', err);
+    }
+  }
+
+  const users = loadUsers();
+  return users.get(id) || null;
+}
+
 export async function getUserByEmail(email: string): Promise<UserAccount | null> {
   const normalized = email.trim().toLowerCase();
+
+  if (redis) {
+    try {
+      const userId = await redis.get<string>(`norun:email:${normalized}`);
+      if (userId) {
+        return getUserById(userId);
+      }
+      return null;
+    } catch (err) {
+      console.error('Redis getUserByEmail error:', err);
+    }
+  }
+
   const users = loadUsers();
   let found: UserAccount | null = null;
   users.forEach((user) => {
@@ -58,11 +112,6 @@ export async function getUserByEmail(email: string): Promise<UserAccount | null>
     }
   });
   return found;
-}
-
-export async function getUserById(id: string): Promise<UserAccount | null> {
-  const users = loadUsers();
-  return users.get(id) || null;
 }
 
 export async function createOrGetUser(email: string): Promise<{ user: UserAccount; isNew: boolean }> {
@@ -85,21 +134,16 @@ export async function createOrGetUser(email: string): Promise<{ user: UserAccoun
     createdAt: new Date().toISOString(),
   };
 
-  const users = loadUsers();
-  users.set(id, newUser);
-  saveUsers(users);
-
+  await saveUserToStore(newUser);
   return { user: newUser, isNew: true };
 }
 
 export async function addCredits(userId: string, amount: number): Promise<UserAccount | null> {
-  const users = loadUsers();
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) return null;
 
   user.credits = (user.credits || 0) + amount;
-  users.set(userId, user);
-  saveUsers(users);
+  await saveUserToStore(user);
   return user;
 }
 
@@ -107,8 +151,7 @@ export async function updateSubscription(
   userId: string,
   subData: Partial<UserSubscription> & { stripeCustomerId?: string }
 ): Promise<UserAccount | null> {
-  const users = loadUsers();
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) return null;
 
   const currentSub: UserSubscription = user.subscription || {
@@ -126,8 +169,7 @@ export async function updateSubscription(
     user.stripeCustomerId = subData.stripeCustomerId;
   }
 
-  users.set(userId, user);
-  saveUsers(users);
+  await saveUserToStore(user);
   return user;
 }
 
@@ -136,8 +178,7 @@ export async function consumeExportCredit(userId: string): Promise<{
   reason: 'free_trial' | 'credit' | 'subscription' | 'insufficient_funds';
   user: UserAccount | null;
 }> {
-  const users = loadUsers();
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) {
     return { success: false, reason: 'insufficient_funds', user: null };
   }
@@ -150,16 +191,14 @@ export async function consumeExportCredit(userId: string): Promise<{
   // 2. Essai gratuit disponible (1er export offert)
   if (user.freeTrialAvailable) {
     user.freeTrialAvailable = false;
-    users.set(userId, user);
-    saveUsers(users);
+    await saveUserToStore(user);
     return { success: true, reason: 'free_trial', user };
   }
 
   // 3. Crédits achetés via Packs
   if (user.credits > 0) {
     user.credits -= 1;
-    users.set(userId, user);
-    saveUsers(users);
+    await saveUserToStore(user);
     return { success: true, reason: 'credit', user };
   }
 

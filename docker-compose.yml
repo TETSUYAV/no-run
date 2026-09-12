@@ -6,6 +6,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - DATA_DIR=/app/.data
+    volumes:
+      - ./data:/app/.data
     networks:
       - norun-network
 
