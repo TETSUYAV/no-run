@@ -286,51 +286,6 @@ export function PricingView() {
         </Button>
       </div>
 
-      {/* Comparatif No Run vs Concurrents */}
-      <div className="mt-14 max-w-4xl mx-auto">
-        <h2 className="text-center text-lg font-bold text-[#37352f]">
-          Pourquoi No Run face aux abonnements contraignants (Canaprun)
-        </h2>
-        <div className="mt-6 overflow-hidden rounded-2xl border border-[#e8e7e3] bg-white shadow-sm">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#faf9f5] border-b border-[#e8e7e3] text-[#787774]">
-              <tr>
-                <th className="py-3 px-4 font-semibold">Critère</th>
-                <th className="py-3 px-4 font-bold text-[#fc5200]">No Run</th>
-                <th className="py-3 px-4 font-normal text-[#787774]">Autres générateurs (ex: Canaprun)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f1f0ec] text-[#37352f]">
-              <tr>
-                <td className="py-3 px-4 font-medium">Modèle économique</td>
-                <td className="py-3 px-4 font-semibold text-emerald-600">✅ 100% Sans abonnement</td>
-                <td className="py-3 px-4 text-[#787774]">❌ Abonnement mensuel forcé</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium">Validité des crédits</td>
-                <td className="py-3 px-4 font-semibold text-emerald-600">✅ Valables à vie</td>
-                <td className="py-3 px-4 text-[#787774]">❌ Crédits expirés à la fin du mois</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium">Essai gratuit</td>
-                <td className="py-3 px-4 font-semibold text-emerald-600">✅ 1er tracé offert sans CB</td>
-                <td className="py-3 px-4 text-[#787774]">❌ 0 export (CB obligatoire)</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium">Régulation Minetti GAP</td>
-                <td className="py-3 px-4 font-semibold text-emerald-600">✅ Ralentissement réaliste en côte</td>
-                <td className="py-3 px-4 text-[#787774]">❌ Allure plate incohérente</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-medium">Paiement instantané</td>
-                <td className="py-3 px-4 font-semibold text-emerald-600">✅ Apple Pay & Google Pay en 1 clic</td>
-                <td className="py-3 px-4 text-[#787774]">Saisie CB manuelle</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
