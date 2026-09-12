@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: 'insufficient_credits',
-          message: 'Votre solde d’exports est épuisé. Rechargez un pack ou rejoignez le Club Alibi.',
+          message: 'Votre solde d’exports est épuisé. Rechargez un pack de crédits pour continuer.',
           freeTrialAvailable: false,
           credits: creditCheck.user?.credits ?? 0,
         },

@@ -111,9 +111,15 @@ export async function updateSubscription(
   const user = users.get(userId);
   if (!user) return null;
 
+  const currentSub: UserSubscription = user.subscription || {
+    status: 'none',
+    plan: null,
+  };
+
   user.subscription = {
-    ...user.subscription,
-    ...subData,
+    status: subData.status ?? currentSub.status,
+    plan: subData.plan !== undefined ? subData.plan : currentSub.plan,
+    currentPeriodEnd: subData.currentPeriodEnd ?? currentSub.currentPeriodEnd,
   };
 
   if (subData.stripeCustomerId) {
@@ -136,7 +142,7 @@ export async function consumeExportCredit(userId: string): Promise<{
     return { success: false, reason: 'insufficient_funds', user: null };
   }
 
-  // 1. Abonnement actif (Club Alibi)
+  // 1. Abonnement actif (rétrocompatibilité)
   if (user.subscription && user.subscription.status === 'active') {
     return { success: true, reason: 'subscription', user };
   }

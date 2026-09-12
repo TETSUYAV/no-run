@@ -39,11 +39,11 @@ export interface PlaceSearchResult {
   bbox?: [number, number, number, number];
 }
 
-export type PricingProductId = 'pack_3' | 'pack_10' | 'club_monthly' | 'club_yearly';
+export type PricingProductId = 'pack_3' | 'pack_10' | 'pack_25';
 
 export interface UserSubscription {
   status: 'active' | 'canceled' | 'none';
-  plan: 'club_monthly' | 'club_yearly' | null;
+  plan: string | null;
   currentPeriodEnd?: string;
 }
 
@@ -52,7 +52,7 @@ export interface UserAccount {
   email: string;
   credits: number;
   freeTrialAvailable: boolean;
-  subscription: UserSubscription;
+  subscription?: UserSubscription;
   stripeCustomerId?: string;
   createdAt: string;
 }

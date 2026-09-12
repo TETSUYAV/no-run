@@ -6,7 +6,6 @@ import {
   createOrGetUser,
   verifySessionToken,
   addCredits,
-  updateSubscription,
 } from '@/lib/userStore';
 
 export async function POST(req: NextRequest) {
@@ -47,8 +46,6 @@ export async function POST(req: NextRequest) {
 
     // If Stripe is configured, create live Stripe Checkout Session
     if (stripe) {
-      const isSubscription = product.mode === 'subscription';
-
       let lineItems: any[] = [];
       if (product.stripePriceId) {
         lineItems = [{ price: product.stripePriceId, quantity: 1 }];
@@ -62,9 +59,6 @@ export async function POST(req: NextRequest) {
                 description: product.description,
               },
               unit_amount: product.priceCents,
-              ...(isSubscription
-                ? { recurring: { interval: product.interval || 'month' } }
-                : {}),
             },
             quantity: 1,
           },
@@ -74,7 +68,7 @@ export async function POST(req: NextRequest) {
       const session = await stripe.checkout.sessions.create({
         customer_email: user.email,
         payment_method_types: ['card'],
-        mode: product.mode,
+        mode: 'payment',
         line_items: lineItems,
         metadata: {
           userId: user.id,
@@ -90,16 +84,7 @@ export async function POST(req: NextRequest) {
 
     // Fallback: Dev/Mock mode if Stripe keys are not yet configured in env
     console.warn('[No Run] Mode Démo / Dev : Pas de clé STRIPE_SECRET_KEY, simulation d’achat activée.');
-    if (product.mode === 'payment') {
-      await addCredits(user.id, product.credits);
-    } else {
-      await updateSubscription(user.id, {
-        status: 'active',
-        plan: product.id as any,
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-      await addCredits(user.id, 30);
-    }
+    await addCredits(user.id, product.credits);
 
     return NextResponse.json({
       url: `${origin}/create?payment=mock_success&product=${product.id}`,

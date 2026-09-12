@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
             await addCredits(userId, credits);
             console.log(`[Stripe Webhook] ${credits} crédits ajoutés à l'utilisateur ${userId}`);
           } else if (session.mode === 'subscription') {
-            // Abonnement Club Alibi
+            // Rétrocompatibilité abonnement
             await updateSubscription(userId, {
               status: 'active',
               plan: productId,

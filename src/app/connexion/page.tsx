@@ -4,7 +4,7 @@ import { AccountView } from '@/components/AccountView';
 
 export const metadata = {
   title: 'Mon Compte & Connexion — No Run',
-  description: 'Gérez votre solde de crédits d’export GPX et votre abonnement Club Alibi.',
+  description: 'Gérez votre solde de crédits d’export GPX valables à vie sans abonnement.',
 };
 
 export default function ConnexionPage() {

@@ -4,7 +4,7 @@ import { PricingView } from '@/components/PricingView';
 
 export const metadata = {
   title: 'Tarifs & Packs — No Run',
-  description: 'Crédits valables à vie sans abonnement, ou Club Alibi mensuel avec report des crédits.',
+  description: 'Crédits valables à vie sans abonnement ni engagement. 1er tracé offert.',
 };
 
 export default function PricingPage() {

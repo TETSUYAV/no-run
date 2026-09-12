@@ -131,30 +131,29 @@ export function PaywallModal({ isOpen, onClose, userEmail }: PaywallModalProps) 
             </div>
           </div>
 
-          {/* Club Alibi */}
+          {/* Pack 25 */}
           <div
-            onClick={() => setSelectedPlan('club_monthly')}
+            onClick={() => setSelectedPlan('pack_25')}
             className={`relative flex flex-col justify-between p-4 rounded-xl border cursor-pointer transition-all ${
-              selectedPlan === 'club_monthly'
+              selectedPlan === 'pack_25'
                 ? 'border-[#fc5200] bg-white shadow-md ring-2 ring-[#fc5200]/20'
                 : 'border-[#e9e8e4] bg-white/70 hover:border-[#d3d1cb]'
             }`}
           >
             <div>
-              <div className="text-xs font-semibold text-[#787774]">Club Alibi</div>
+              <div className="text-xs font-semibold text-[#787774]">Grand Chelem</div>
               <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[#37352f] telemetry-mono">6,90 €</span>
-                <span className="text-[10px] text-[#787774]">/mois</span>
+                <span className="text-2xl font-bold text-[#37352f] telemetry-mono">14,99 €</span>
               </div>
-              <div className="text-[11px] text-[#787774] mt-0.5">30 tracés / mois</div>
+              <div className="text-[11px] text-[#787774] mt-0.5">25 tracés (0,60 € / tracé)</div>
               <ul className="mt-3 space-y-1.5 text-[11px] text-[#37352f]">
                 <li className="flex items-center gap-1.5">
                   <Check className="size-3 text-[#fc5200] shrink-0" />
-                  <span>Crédits reportés</span>
+                  <span>Meilleur tarif (-40%)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
                   <Check className="size-3 text-[#fc5200] shrink-0" />
-                  <span>Toutes montres GPS</span>
+                  <span>Valable à vie</span>
                 </li>
               </ul>
             </div>
@@ -186,7 +185,7 @@ export function PaywallModal({ isOpen, onClose, userEmail }: PaywallModalProps) 
                     ? 'Alibi Express (2,99 €)'
                     : selectedPlan === 'pack_10'
                     ? 'Grasse Matinée (6,99 €)'
-                    : 'Club Alibi (6,90 € / mois)'}
+                    : 'Grand Chelem (14,99 €)'}
                 </span>
                 <ArrowRight className="size-4" />
               </>
