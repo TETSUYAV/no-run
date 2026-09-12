@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
               product_data: {
                 name: product.name,
                 description: product.description,
+                tax_code: 'txcd_10000000', // SaaS / Biens numériques
               },
               unit_amount: product.priceCents,
             },
@@ -67,7 +68,6 @@ export async function POST(req: NextRequest) {
 
       const session = await stripe.checkout.sessions.create({
         customer_email: user.email,
-        payment_method_types: ['card'],
         mode: 'payment',
         line_items: lineItems,
         metadata: {
