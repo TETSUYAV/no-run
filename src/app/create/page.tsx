@@ -14,6 +14,9 @@ import {
 import { fetchRoute } from '@/lib/routing';
 import { generateGPX } from '@/lib/gpx';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { AuthModal } from '@/components/AuthModal';
+import { PaywallModal } from '@/components/PaywallModal';
+import { Gift, CheckCircle2, Sparkles, X } from 'lucide-react';
 
 // Dynamically import MapView to avoid SSR issues with Leaflet
 const MapView = dynamic(
@@ -48,7 +51,7 @@ function createDefaultDraft(sport: Sport = 'running'): ActivityDraft {
     heartRateEnabled: false,
     heartRate: 155,
     heartRateVariation: 0.05,
-    startTime: defaultStartTime(),
+    startTime: '2026-09-12T09:00',
     activityName: defaults.activityName,
     snapToRoads: defaults.supportsSnapping,
     deviceId: devices.find((d) => d.id === DEFAULT_DEVICE_ID)?.id ?? devices[0]?.id ?? DEFAULT_DEVICE_ID,
@@ -65,6 +68,41 @@ export default function CreatePage() {
 
   const [isExporting, setIsExporting] = React.useState(false);
   const [exportError, setExportError] = React.useState<string | null>(null);
+
+  const [user, setUser] = React.useState<any>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
+  const [isPaywallModalOpen, setIsPaywallModalOpen] = React.useState(false);
+  const [exportSuccessMessage, setExportSuccessMessage] = React.useState<string | null>(null);
+  const [paymentBanner, setPaymentBanner] = React.useState<string | null>(null);
+
+  const refreshUser = React.useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth');
+      const data = await res.json();
+      if (data.authenticated && data.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch {
+      setUser(null);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const payment = params.get('payment');
+      if (payment === 'success' || payment === 'mock_success') {
+        setPaymentBanner('🎉 Paiement validé ! Vos crédits sont activés et prêts à l’emploi.');
+        refreshUser();
+      }
+    }
+  }, [refreshUser]);
 
   // Restore draft from localStorage on mount
   React.useEffect(() => {
@@ -83,6 +121,8 @@ export default function CreatePage() {
           }));
           setHasRestoredDraft(true);
         }
+      } else {
+        setDraft((prev) => ({ ...prev, startTime: defaultStartTime() }));
       }
     } catch (e) {
       console.warn('Could not read draft from localStorage', e);
@@ -208,24 +248,63 @@ export default function CreatePage() {
     setHasRestoredDraft(false);
   };
 
-  // GPX Export Handler
-  const handleExport = async () => {
+  // GPX Export Handler via API (contrôle des crédits & session)
+  const handleExport = async (overrideUser?: any) => {
     if (draft.waypoints.length < 2) return;
     setIsExporting(true);
     setExportError(null);
+    setExportSuccessMessage(null);
+
+    const currentUser = overrideUser || user;
+
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      setIsExporting(false);
+      return;
+    }
 
     try {
       const coords = routeResult?.coordinates ?? draft.waypoints;
       const elevations = routeResult?.elevations;
 
-      // Generate GPX string directly
-      const gpxContent = generateGPX({
-        ...draft,
-        coordinates: coords,
-        elevations,
+      const res = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sport: draft.sport,
+          waypoints: draft.waypoints,
+          coordinates: coords,
+          elevations,
+          pace: draft.pace,
+          paceVariation: draft.paceVariation,
+          heartRate: draft.heartRateEnabled
+            ? { baseHr: draft.heartRate, variation: draft.heartRateVariation }
+            : undefined,
+          startTime: draft.startTime,
+          activityName: draft.activityName,
+          deviceId: draft.deviceId,
+          snapToRoads: draft.snapToRoads,
+        }),
       });
 
-      const blob = new Blob([gpxContent], { type: 'application/gpx+xml;charset=utf-8' });
+      if (res.status === 401) {
+        setIsAuthModalOpen(true);
+        setIsExporting(false);
+        return;
+      }
+
+      if (res.status === 402) {
+        setIsPaywallModalOpen(true);
+        setIsExporting(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.message || 'L’export a échoué.');
+      }
+
+      const blob = await res.blob();
       const safeFilename = (draft.activityName || 'activite')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -239,6 +318,23 @@ export default function CreatePage() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+      const remainingCreditsStr = res.headers.get('X-NoRun-Credits-Remaining');
+      const creditReason = res.headers.get('X-NoRun-Credit-Reason');
+      if (remainingCreditsStr !== null) {
+        setUser((prev: any) => ({
+          ...prev,
+          credits: parseInt(remainingCreditsStr, 10),
+          freeTrialAvailable: creditReason === 'free_trial' ? false : prev?.freeTrialAvailable,
+        }));
+      }
+
+      setExportSuccessMessage(
+        creditReason === 'free_trial'
+          ? '🎉 Votre 1er tracé offert a été exporté ! Prêt pour Strava.'
+          : '✅ Tracé GPX exporté avec succès !'
+      );
+      setTimeout(() => setExportSuccessMessage(null), 5000);
     } catch (err: any) {
       console.error('GPX export failed:', err);
       setExportError(err?.message ?? 'L’export a échoué.');
@@ -255,6 +351,40 @@ export default function CreatePage() {
       <SiteHeader />
 
       <h1 className="sr-only">Créer un tracé GPX</h1>
+
+      {/* Notifications bar */}
+      {(paymentBanner || exportSuccessMessage) && (
+        <div className="z-30 px-4 pt-2">
+          {paymentBanner && (
+            <div className="mx-auto flex max-w-2xl items-center justify-between gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-xs font-medium text-emerald-800 border border-emerald-200 shadow-sm animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                <span>{paymentBanner}</span>
+              </div>
+              <button
+                onClick={() => setPaymentBanner(null)}
+                className="p-1 text-emerald-600 hover:text-emerald-900"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          )}
+          {exportSuccessMessage && (
+            <div className="mx-auto mt-1 flex max-w-2xl items-center justify-between gap-2 rounded-xl bg-[#fff3ec] px-4 py-2.5 text-xs font-medium text-[#fc5200] border border-[#ffd8c7] shadow-sm animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-4 text-[#fc5200] shrink-0" />
+                <span>{exportSuccessMessage}</span>
+              </div>
+              <button
+                onClick={() => setExportSuccessMessage(null)}
+                className="p-1 text-[#fc5200] hover:text-[#e04800]"
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex min-h-0 flex-1 flex-col pt-2 lg:flex-row lg:pt-[11px]">
         {/* Map View */}
@@ -287,6 +417,23 @@ export default function CreatePage() {
           exportError={exportError}
         />
       </div>
+
+      {/* Modales Auth & Paywall */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={(newUser) => {
+          setUser(newUser);
+          setIsAuthModalOpen(false);
+          handleExport(newUser);
+        }}
+      />
+
+      <PaywallModal
+        isOpen={isPaywallModalOpen}
+        onClose={() => setIsPaywallModalOpen(false)}
+        userEmail={user?.email}
+      />
     </div>
   );
 }

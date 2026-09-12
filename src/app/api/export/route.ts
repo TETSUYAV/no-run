@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateGPX } from '@/lib/gpx';
 import { Sport } from '@/lib/types';
+import { verifySessionToken, consumeExportCredit } from '@/lib/userStore';
 
 // In-memory sliding window rate limiting (max 30 requests per minute per IP)
 const ipRequestCounts = new Map<string, { count: number; resetTime: number }>();
@@ -34,7 +35,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 1. Authentification & Vérification de Session
+    const token =
+      req.cookies.get('norun_session')?.value ||
+      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+
+    let userId: string | null = null;
+    if (token) {
+      const payload = verifySessionToken(token);
+      if (payload) {
+        userId = payload.userId;
+      }
+    }
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          error: 'unauthorized',
+          message: 'Veuillez vous connecter pour télécharger votre tracé (1er tracé offert).',
+        },
+        { status: 401 }
+      );
+    }
+
+    // 2. Contrôle du Solde de Crédits / Abonnement
+    const creditCheck = await consumeExportCredit(userId);
+    if (!creditCheck.success) {
+      return NextResponse.json(
+        {
+          error: 'insufficient_credits',
+          message: 'Votre solde d’exports est épuisé. Rechargez un pack ou rejoignez le Club Alibi.',
+          freeTrialAvailable: false,
+          credits: creditCheck.user?.credits ?? 0,
+        },
+        { status: 402 }
+      );
+    }
+
     const body = await req.json();
+
 
     const sport: Sport = body.sport || 'running';
     const waypoints = body.waypoints || [];
@@ -95,6 +134,8 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/gpx+xml; charset=utf-8',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'X-RateLimit-Limit': '30',
+        'X-NoRun-Credit-Reason': creditCheck.reason,
+        'X-NoRun-Credits-Remaining': (creditCheck.user?.credits ?? 0).toString(),
       },
     });
   } catch (err: any) {

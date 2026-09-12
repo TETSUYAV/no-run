@@ -38,3 +38,22 @@ export interface PlaceSearchResult {
   center: [number, number]; // [lng, lat]
   bbox?: [number, number, number, number];
 }
+
+export type PricingProductId = 'pack_3' | 'pack_10' | 'club_monthly' | 'club_yearly';
+
+export interface UserSubscription {
+  status: 'active' | 'canceled' | 'none';
+  plan: 'club_monthly' | 'club_yearly' | null;
+  currentPeriodEnd?: string;
+}
+
+export interface UserAccount {
+  id: string;
+  email: string;
+  credits: number;
+  freeTrialAvailable: boolean;
+  subscription: UserSubscription;
+  stripeCustomerId?: string;
+  createdAt: string;
+}
+

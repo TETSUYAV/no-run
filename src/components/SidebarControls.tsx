@@ -349,7 +349,7 @@ export function SidebarControls({
               onClick={onExport}
             >
               <Download className="size-4 shrink-0" />
-              <span>{isExporting ? 'Calcul télémétrique en cours…' : 'Générer la trace fantôme GPX'}</span>
+              <span>{isExporting ? 'Calcul télémétrique en cours…' : 'Télécharger le tracé GPX'}</span>
             </Button>
           </motion.div>
         </div>

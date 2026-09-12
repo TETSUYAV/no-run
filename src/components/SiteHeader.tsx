@@ -3,13 +3,28 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sparkles, Activity } from 'lucide-react';
+import { Menu, X, Sparkles, Activity, Gift, Crown, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [user, setUser] = React.useState<any>(null);
   const pathname = usePathname();
+
+  React.useEffect(() => {
+    fetch('/api/auth')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.user) {
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => setUser(null));
+  }, [pathname]);
+
 
   return (
     <header className="sticky top-0 z-40 transition-all duration-300">
@@ -87,16 +102,58 @@ export function SiteHeader() {
 
           {/* Right side telemetry & action buttons */}
           <div className="hidden items-center gap-3 sm:gap-4 md:flex">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#f7f6f3] border border-[#e8e7e3] text-xs font-mono text-[#787774]">
-              <span className="size-2 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="font-medium">LIVE GPS</span>
-            </div>
-            <Link
-              className="rounded-xl border border-[#e8e7e3] bg-white px-4 py-2 text-xs sm:text-[13px] font-medium text-[#37352f] transition-all hover:bg-[#f7f6f3] hover:border-[#d6d5cf] active:scale-95"
-              href="/connexion"
-            >
-              Session
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-2">
+                {user.subscription?.status === 'active' ? (
+                  <Link
+                    href="/pricing"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fff2eb] border border-[#ffd8c7] text-xs font-semibold text-[#fc5200] transition-colors hover:bg-[#ffe5d6]"
+                  >
+                    <Crown className="size-3.5" />
+                    <span>Club Alibi</span>
+                  </Link>
+                ) : user.credits > 0 ? (
+                  <Link
+                    href="/pricing"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#fff2eb] border border-[#ffd8c7] text-xs font-semibold text-[#fc5200] transition-colors hover:bg-[#ffe5d6]"
+                  >
+                    <span>🛋️</span>
+                    <span>{user.credits} crédit{user.credits > 1 ? 's' : ''}</span>
+                  </Link>
+                ) : user.freeTrialAvailable ? (
+                  <Link
+                    href="/create"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] text-xs font-semibold text-[#059669] transition-colors hover:bg-[#d1fae5]"
+                  >
+                    <Gift className="size-3.5" />
+                    <span>1 tracé offert</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/pricing"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#f7f6f3] border border-[#e8e7e3] text-xs font-medium text-[#787774] hover:text-[#fc5200] transition-colors"
+                  >
+                    <span>0 crédit (Recharger)</span>
+                  </Link>
+                )}
+
+                <Link
+                  href="/connexion"
+                  className="rounded-xl border border-[#e8e7e3] bg-white px-3 py-1.5 text-xs font-medium text-[#787774] hover:text-[#37352f] transition-all hover:bg-[#f7f6f3]"
+                  title={user.email}
+                >
+                  <UserIcon className="size-3.5" />
+                </Link>
+              </div>
+            ) : (
+              <Link
+                className="rounded-xl border border-[#e8e7e3] bg-white px-4 py-2 text-xs sm:text-[13px] font-medium text-[#37352f] transition-all hover:bg-[#f7f6f3] hover:border-[#d6d5cf] active:scale-95"
+                href="/connexion"
+              >
+                Connexion
+              </Link>
+            )}
+
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
               <Link
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs sm:text-[13px] font-semibold transition-all duration-200 bg-gradient-to-r from-[#fc5200] via-[#eb4d00] to-[#d64300] text-white shadow-sm shadow-[#fc5200]/30 hover:shadow-md hover:shadow-[#fc5200]/40 h-9 sm:h-9.5 px-4 sm:px-5"
